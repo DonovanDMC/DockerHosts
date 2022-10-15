@@ -41,30 +41,34 @@ export default class HostsManager {
         // eslint-disable-next-line prefer-const
         for (let [dns, { id, ip, name, stack, suffix }] of Object.entries(parsed)) {
             const containerHost = options.containerHosts[name];
-            if (containerHost && dns !== containerHost) {
-                debug("Found out of place host for %s -> %s, did not find expected host (%s). Assuming host was changed, removing..", dns, ip, containerHost);
-                debug("Removed: %s -> %s", dns, ip);
-                removed++;
-                delete parsed[dns];
-                continue;
-            }
-            if (id && options.removeIDContainers) {
-                debug("Found id host %s -> %s, while id hosts are disabled. Assuming configuration change, removing..", dns, ip);
-                debug("Removed: %s -> %s", dns, ip);
-                removed++;
-                delete parsed[dns];
-                continue;
-            }
-            const stackSuffix = stack === null ? null : options.stackSuffixes[stack] ?? null;
-            if (stackSuffix && suffix !== stackSuffix) {
-                debug("Found out of place host for %s -> %s, did not find expected suffix (%s). Assuming suffix was changed, removing..", dns, ip, stackSuffix);
-                debug("Removed: %s -> %s", dns, ip);
-                removed++;
-                delete parsed[dns];
-                continue;
-            }
-            if (suffix === null) {
-                suffix = ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
+            console.log(dns, containerHost, name);
+            if (containerHost) {
+                if (dns !== containerHost) {
+                    debug("Found out of place host for %s -> %s, did not find expected host (%s). Assuming host was changed, removing..", dns, ip, containerHost);
+                    debug("Removed: %s -> %s", dns, ip);
+                    removed++;
+                    delete parsed[dns];
+                    continue;
+                }
+            } else {
+                if (id && options.removeIDContainers) {
+                    debug("Found id host %s -> %s, while id hosts are disabled. Assuming configuration change, removing..", dns, ip);
+                    debug("Removed: %s -> %s", dns, ip);
+                    removed++;
+                    delete parsed[dns];
+                    continue;
+                }
+                const stackSuffix = stack === null ? null : options.stackSuffixes[stack] ?? null;
+                if (stackSuffix && suffix !== stackSuffix) {
+                    debug("Found out of place host for %s -> %s, did not find expected suffix (%s). Assuming suffix was changed, removing..", dns, ip, stackSuffix);
+                    debug("Removed: %s -> %s", dns, ip);
+                    removed++;
+                    delete parsed[dns];
+                    continue;
+                }
+                if (suffix === null) {
+                    suffix = ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
+                }
             }
             if (options.entries[name] === undefined) {
                 if (stack && options.keepStacks.includes(stack)) {

@@ -1,6 +1,6 @@
 {
     "name": "docker-hosts",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "A module to automatically make the system hosts file map to docker ips.",
     "main": "dist/index.js",
     "scripts": {
