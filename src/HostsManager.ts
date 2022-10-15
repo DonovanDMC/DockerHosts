@@ -42,7 +42,6 @@ export default class HostsManager {
             const originalDNS = dns;
             let suffix: string | undefined;
             suffix = ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
-            console.log(stack, stack && options.stackSuffixes[stack], suffix, options.suffix);
             dns = dns.slice(0, -suffix.length);
             if (options.entries[dns] === undefined) {
                 if (stack && options.keepStacks.includes(stack)) {
@@ -58,7 +57,6 @@ export default class HostsManager {
         for (let [dns, { ip, stack }] of Object.entries(options.entries)) {
             let suffix: string | undefined;
             dns += ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
-            console.log(stack, stack && options.stackSuffixes[stack], suffix, options.suffix);
             if (parsed[dns] === undefined) {
                 added++;
                 parsed[dns] = { ip, stack };
@@ -71,7 +69,7 @@ export default class HostsManager {
 
         const rawLines = raw.slice(0, startIndex - 1);
         if (rawLines.at(startIndex - 1) !== "") rawLines.push("");
-        await writeFile(options.path, [...rawLines, "# Start Docker", "", table(Object.entries(parsed).map(([dns, { ip, stack }]) => [ip, dns, `# auto=true${stack === null ? "" : `&stack=${stack}`}`]), { align: ["l", "r", "l"] }), "", "# End Docker", ""].join("\n"));
+        await writeFile(options.path, [...rawLines, "# Start Docker", "", table(Object.entries(parsed).map(([dns, { ip, stack }]) => [ip, dns, `# auto=true${stack === null ? "" : `&stack=${stack}`}`]), { align: ["l", "l", "l"] }), "", "# End Docker", ""].join("\n"));
         (process.env.CLI === "1" ? console.debug : debug)("Write Completed - Added: %d, Removed: %d, Unchanged: %d", added, removed, unchanged);
     }
 }

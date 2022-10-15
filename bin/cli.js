@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { program } from "commander";
-import d from "debug";
+import Debug from "debug";
 import { access, readFile } from "fs/promises";
 import { platform } from "os";
 import getContainerMap from "../dist/getContainerMap.js";
 import HostsManager from "../dist/HostsManager.js";
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
-
+const debug = Debug("docker-hosts");
 
 program
     .name("docker-hosts")
@@ -26,13 +26,17 @@ program
 await program.parseAsync();
 let opt = program.opts();
 if(await access(opt.config).then(() => true, () => false)) {
-    opt = Object.assign({}, JSON.parse(await readFile(opt.config, "utf8")), opt);
+    const config = JSON.parse(await readFile(opt.config, "utf8"));
+    debug("Loaded Config:", config);
+    debug("Original Config:", opt);
+    opt = Object.assign({}, config, opt);
+    debug("Merged Config:", opt);
 }
 if(Array.isArray(opt.stackSuffixes)) {
     opt.stackSuffixes = opt.stackSuffixes.reduce((a, b) => ({ ...a, [b.split("=")[0]]: b.split("=")[1] }), {});
 }
-const { hostsFile, host, socket, suffix, debug, silent, keepPeriods, keepStacks, stackSuffixes } = opt;
-if(debug) d.enable("docker-hosts");
+const { hostsFile, host, socket, suffix, debug: debugEnabled, silent, keepPeriods, keepStacks, stackSuffixes } = opt;
+if(debugEnabled) Debug.enable("docker-hosts");
 if(!silent) process.env.CLI = "1";
 await HostsManager.checkWrite(hostsFile);
 const containers = await getContainerMap({ host, socketPath: socket }, keepPeriods);
