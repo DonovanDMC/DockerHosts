@@ -82,7 +82,9 @@ export default class HostsManager {
             const containerHost = options.containerHosts[name];
             const stackSuffix = stack === null ?  null : options.stackSuffixes[stack] ?? null;
             let suffix: string | undefined;
-            const dns = containerHost ?? `${name}${(suffix = stackSuffix ?? options.suffix)}`;
+            let n = name;
+            if (!options.keepPeriods) n = n.replace(/\./g, "-");
+            const dns = containerHost ?? `${n}${(suffix = stackSuffix ?? options.suffix)}`;
             if (parsed[dns] === undefined) {
                 added++;
                 parsed[dns] = { id, ip, stack, suffix: suffix ?? null, name };
@@ -103,6 +105,7 @@ export default class HostsManager {
 interface WriteOptions {
     containerHosts: Record<string, string>;
     entries: ContainerMap;
+    keepPeriods: boolean;
     keepStacks: Array<string>;
     path: string;
     removeIDContainers: boolean;

@@ -3,7 +3,6 @@ import Docker from "dockerode";
 export interface GetContainerMapOptions {
     docker?: Docker.DockerOptions;
     includeIDs?: boolean;
-    keepPeriods?: boolean;
 }
 export type ContainerMap = Record<string, ContainerInfo>;
 export interface ContainerInfo {
@@ -14,7 +13,6 @@ export interface ContainerInfo {
 export default async function getContainerMap(options?: GetContainerMapOptions) {
     options = options ?? {};
     if (options.includeIDs === undefined) options.includeIDs = false;
-    if (options.keepPeriods === undefined) options.keepPeriods = false;
     const docker = new Docker(options.docker);
     const containers = await docker.listContainers();
     const map: ContainerMap = {};
@@ -32,8 +30,7 @@ export default async function getContainerMap(options?: GetContainerMapOptions) 
             map[id] = { id: true, ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
         }
         if (container.Names.length !== 0) {
-            for (let name of container.Names) {
-                if (!options.keepPeriods) name = name.replace(/\./g, "-");
+            for (const name of container.Names) {
                 map[name.slice(1)] = { id: false, ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
             }
         }

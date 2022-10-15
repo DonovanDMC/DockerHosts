@@ -7,7 +7,8 @@
         "stack1": ".stack1.containers.local"
     },
     "containerHosts": {
-        "my-awsome-project": "awesome.containers.local"
+        "my-awsome-project": "awesome.containers.local",
+        "keep.names.in.tact": "soething-else.containers.local"
     },
     "debug": false,
     "silent": false,
