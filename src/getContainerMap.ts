@@ -1,9 +1,23 @@
 import Docker from "dockerode";
 
-export default async function getContainerMap(options?: Docker.DockerOptions, keepPeriods = false) {
-    const docker = new Docker(options);
+export interface GetContainerMapOptions {
+    docker?: Docker.DockerOptions;
+    includeIDs?: boolean;
+    keepPeriods?: boolean;
+}
+export type ContainerMap = Record<string, ContainerInfo>;
+export interface ContainerInfo {
+    id: boolean;
+    ip: string;
+    stack: string | null;
+}
+export default async function getContainerMap(options?: GetContainerMapOptions) {
+    options = options ?? {};
+    if (options.includeIDs === undefined) options.includeIDs = false;
+    if (options.keepPeriods === undefined) options.keepPeriods = false;
+    const docker = new Docker(options.docker);
     const containers = await docker.listContainers();
-    const map: Record<string, { ip: string; stack: string | null; }> = {};
+    const map: ContainerMap = {};
     for (const container of containers) {
         let ipAddress: string | undefined;
         for (const network of Object.values(container.NetworkSettings.Networks)) {
@@ -14,11 +28,13 @@ export default async function getContainerMap(options?: Docker.DockerOptions, ke
             continue;
         }
         const id = container.Id.slice(0, 12);
-        map[id] = { ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
+        if (options.includeIDs) {
+            map[id] = { id: true, ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
+        }
         if (container.Names.length !== 0) {
             for (let name of container.Names) {
-                if (!keepPeriods) name = name.replace(/\./g, "-");
-                map[name.slice(1)] = { ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
+                if (!options.keepPeriods) name = name.replace(/\./g, "-");
+                map[name.slice(1)] = { id: false, ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
             }
         }
     }

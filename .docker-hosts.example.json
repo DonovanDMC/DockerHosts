@@ -6,8 +6,12 @@
     "stackSuffixes": {
         "stack1": ".stack1.containers.local"
     },
+    "containerHosts": {
+        "my-awsome-project": "awesome.containers.local"
+    },
     "debug": false,
     "silent": false,
+    "idHosts": false,
     "keepPeriods": false,
     "keepStacks": [
         "stack1",

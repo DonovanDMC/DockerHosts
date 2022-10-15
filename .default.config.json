@@ -4,8 +4,10 @@
     "socket": "/var/run/docker.sock",
     "suffix": ".containers.local",
     "stackSuffixes": {},
+    "containerSuffixes": {},
     "debug": false,
     "silent": false,
+    "idHosts": false,
     "keepPeriods": false,
     "keepStacks": []
 }
