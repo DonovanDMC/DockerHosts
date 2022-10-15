@@ -41,7 +41,6 @@ export default class HostsManager {
         // eslint-disable-next-line prefer-const
         for (let [dns, { id, ip, name, stack, suffix }] of Object.entries(parsed)) {
             const containerHost = options.containerHosts[name];
-            console.log(dns, containerHost, name);
             if (containerHost) {
                 if (dns !== containerHost) {
                     debug("Found out of place host for %s -> %s, did not find expected host (%s). Assuming host was changed, removing..", dns, ip, containerHost);
@@ -106,7 +105,7 @@ export default class HostsManager {
     }
 }
 
-interface WriteOptions {
+export interface WriteOptions {
     containerHosts: Record<string, string>;
     entries: ContainerMap;
     keepPeriods: boolean;
