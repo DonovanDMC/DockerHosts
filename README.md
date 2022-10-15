@@ -14,6 +14,10 @@ The recommended usage is as a cli command, but inlinne usage is possible. Due to
 
 Use `docker-hosts --help` for cli usage. No arguments are required. Installing globally will provide the easiest usage, but running with `npx` will also work.
 
+## Config
+This program looks for a file called `.docker-hosts.json` in the working directory where it's executed. The format of this file is camelCasing (some-option -> someOption). The only minor exception is `stackSuffixes`. While this accepts the cli format (key=value array), you can also provide a direct key-value object instead. All options except config can be provided here. Any command line provided options take presedence.
+
+## File Access
 On unix systems this MUST either be ran as root, or a user that has access to edit /etc/hosts.
 
 My recommendation:

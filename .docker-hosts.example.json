@@ -1,0 +1,16 @@
+{
+    "hostsFile": "/etc/hosts",
+    "host": "localhost:2375",
+    "socket": "/var/run/docker.sock",
+    "suffix": ".containers.local",
+    "stackSuffixes": {
+        "stack1": ".stack1.containers.local"
+    },
+    "debug": false,
+    "silent": false,
+    "keepPeriods": false,
+    "keepStacks": [
+        "stack1",
+        "my-cool-stuff"
+    ]
+}

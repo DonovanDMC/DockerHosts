@@ -3,7 +3,7 @@ import Docker from "dockerode";
 export default async function getContainerMap(options?: Docker.DockerOptions, keepPeriods = false) {
     const docker = new Docker(options);
     const containers = await docker.listContainers();
-    const map: Record<string, string> = {};
+    const map: Record<string, { ip: string; stack: string | null; }> = {};
     for (const container of containers) {
         let ipAddress: string | undefined;
         for (const network of Object.values(container.NetworkSettings.Networks)) {
@@ -14,11 +14,11 @@ export default async function getContainerMap(options?: Docker.DockerOptions, ke
             continue;
         }
         const id = container.Id.slice(0, 12);
-        map[id] = ipAddress;
+        map[id] = { ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
         if (container.Names.length !== 0) {
             for (let name of container.Names) {
                 if (!keepPeriods) name = name.replace(/\./g, "-");
-                map[name.slice(1)] = ipAddress;
+                map[name.slice(1)] = { ip: ipAddress, stack: container.Labels["com.docker.compose.project"] ?? null };
             }
         }
     }
