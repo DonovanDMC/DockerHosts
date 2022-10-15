@@ -4,7 +4,7 @@
     "socket": "/var/run/docker.sock",
     "suffix": ".containers.local",
     "stackSuffixes": {},
-    "containerSuffixes": {},
+    "containerHosts": [],
     "debug": false,
     "silent": false,
     "idHosts": false,

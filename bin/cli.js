@@ -37,8 +37,8 @@ if(await access(opt.config).then(() => true, () => false)) {
     debug("Original Config:", opt);
     for(const [key, value] of Object.entries(config)) {
         if(typeof defaultConfig[key] === "object") {
-            if(opt[key] === undefined || Object.keys(opt[key]).length === 0) opt[key] = value;
-        } else if(opt[key] === undefined || opt[key] === defaultConfig[key]) opt[key] = value;
+            if(opt[key] === undefined || (Array.isArray(opt[key]) && opt[key].length === 0) || Object.keys(opt[key]).length === 0) opt[key] = value;
+        } else if(opt[key] === undefined || opt[key] === defaultConfig[key] || defaultConfig[key] === undefined) opt[key] = value;
     }
     debug("Merged Config:", opt);
 }
