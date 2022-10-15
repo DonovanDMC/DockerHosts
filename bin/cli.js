@@ -3,10 +3,13 @@ import { program } from "commander";
 import Debug from "debug";
 import { access, readFile } from "fs/promises";
 import { platform } from "os";
+import { fileURLToPath } from "url";
 import getContainerMap from "../dist/getContainerMap.js";
 import HostsManager from "../dist/HostsManager.js";
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+const defaultConfig = JSON.parse(await readFile(new URL("../.default.config.json", import.meta.url), "utf8"));
 const debug = Debug("docker-hosts");
+debug("Run Environment: CWD: %s Script Location: %s", process.cwd(), fileURLToPath(import.meta.url));
 
 program
     .name("docker-hosts")
@@ -27,9 +30,12 @@ await program.parseAsync();
 let opt = program.opts();
 if(await access(opt.config).then(() => true, () => false)) {
     const config = JSON.parse(await readFile(opt.config, "utf8"));
+    
     debug("Loaded Config:", config);
     debug("Original Config:", opt);
-    opt = Object.assign({}, config, opt);
+    for(const [key, value] of Object.entries(config)) {
+        if(opt[key] === undefined || opt[key] === defaultConfig[key]) opt[key] = value;
+    }
     debug("Merged Config:", opt);
 }
 if(Array.isArray(opt.stackSuffixes)) {
