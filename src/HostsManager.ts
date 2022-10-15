@@ -29,7 +29,7 @@ export default class HostsManager {
         }
         return {
             raw:    lines,
-            parsed: lines.slice(startIndex, endIndex).filter(line => line.includes("auto=true")).map(line => ({ [line.replace(/\s+/g, " ").split(" ")[1]]: { ip: line.replace(/\s+/g, " ").split(" ")[0], stack: line.match(/stack=([\w-]+)/)?.[1] ?? null } })).reduce((a, b) => ({ ...a, ...b }), {} as Record<string, { ip: string; stack: string | null; }>),
+            parsed: lines.slice(startIndex, endIndex).filter(line => line.includes("auto=true")).map(line => ({ [line.replace(/\s+/g, " ").split(" ")[1]]: { ip: line.replace(/\s+/g, " ").split(" ")[0], stack: line.match(/stack=([\w-]+)/)?.[1] ?? null, suffix: line.match(/suffix=([^&]+)/)?.[1] ?? null } })).reduce((a, b) => ({ ...a, ...b }), {} as Record<string, { ip: string; stack: string | null; suffix: string | null; }>),
             startIndex,
             endIndex
         };
@@ -38,10 +38,17 @@ export default class HostsManager {
         const { parsed, raw, startIndex } = await this.read(options.path);
         let added = 0, removed = 0, unchanged = 0;
         // eslint-disable-next-line prefer-const
-        for (let [dns, { ip, stack }] of Object.entries(parsed)) {
+        for (let [dns, { ip, stack, suffix }] of Object.entries(parsed)) {
+            if (stack && options.stackSuffixes[stack] && suffix !== options.stackSuffixes[stack]) {
+                debug("Found out of place host for %s -> %s, did not find expected suffix (%s). Assuming suffix was changed, removing..", dns, ip, options.stackSuffixes[stack]);
+                debug("Removed: %s -> %s", dns, ip);
+                removed++;
+                delete parsed[dns];
+            }
+            if (suffix === null) {
+                suffix = ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
+            }
             const originalDNS = dns;
-            let suffix: string | undefined;
-            suffix = ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
             dns = dns.slice(0, -suffix.length);
             if (options.entries[dns] === undefined) {
                 if (stack && options.keepStacks.includes(stack)) {
@@ -56,10 +63,10 @@ export default class HostsManager {
         // eslint-disable-next-line prefer-const
         for (let [dns, { ip, stack }] of Object.entries(options.entries)) {
             let suffix: string | undefined;
-            dns += ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix;
+            dns += (suffix = ((stack !== null && (suffix = options.stackSuffixes[stack])) || suffix) ?? options.suffix);
             if (parsed[dns] === undefined) {
                 added++;
-                parsed[dns] = { ip, stack };
+                parsed[dns] = { ip, stack, suffix };
                 debug("Added: %s -> %s", dns, ip);
             } else {
                 unchanged++;
@@ -69,7 +76,7 @@ export default class HostsManager {
 
         const rawLines = raw.slice(0, startIndex - 1);
         if (rawLines.at(startIndex - 1) !== "") rawLines.push("");
-        await writeFile(options.path, [...rawLines, "# Start Docker", "", table(Object.entries(parsed).map(([dns, { ip, stack }]) => [ip, dns, `# auto=true${stack === null ? "" : `&stack=${stack}`}`]), { align: ["l", "l", "l"] }), "", "# End Docker", ""].join("\n"));
+        await writeFile(options.path, [...rawLines, "# Start Docker", "", table(Object.entries(parsed).map(([dns, { ip, stack, suffix }]) => [ip, dns, `# auto=true${stack === null ? "" : `&stack=${stack}`}&suffix=${suffix ?? options.suffix}`]), { align: ["l", "l", "l"] }), "", "# End Docker", ""].join("\n"));
         (process.env.CLI === "1" ? console.debug : debug)("Write Completed - Added: %d, Removed: %d, Unchanged: %d", added, removed, unchanged);
     }
 }

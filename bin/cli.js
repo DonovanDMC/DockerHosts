@@ -9,7 +9,7 @@ import HostsManager from "../dist/HostsManager.js";
 const pkg = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 const defaultConfig = JSON.parse(await readFile(new URL("../.default.config.json", import.meta.url), "utf8"));
 const debug = Debug("docker-hosts");
-debug("Run Environment: CWD: %s Script Location: %s", process.cwd(), fileURLToPath(import.meta.url));
+debug("Run Environment: CWD: %s | Script Location: %s", process.cwd(), fileURLToPath(import.meta.url));
 
 program
     .name("docker-hosts")
@@ -34,7 +34,9 @@ if(await access(opt.config).then(() => true, () => false)) {
     debug("Loaded Config:", config);
     debug("Original Config:", opt);
     for(const [key, value] of Object.entries(config)) {
-        if(opt[key] === undefined || opt[key] === defaultConfig[key]) opt[key] = value;
+        if(typeof defaultConfig[key] === "object") {
+            if(opt[key] === undefined || Object.keys(opt[key]).length === 0) opt[key] = value;
+        } else if(opt[key] === undefined || opt[key] === defaultConfig[key]) opt[key] = value;
     }
     debug("Merged Config:", opt);
 }
