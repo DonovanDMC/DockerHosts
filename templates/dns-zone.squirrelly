@@ -1,0 +1,12 @@
+$TTL 60
+@ IN SOA ns.containers.local. admin.containers.local. (
+                 {{it.serial}}   ; Serial
+                 3600   ; Refresh
+                 1800   ; Retry
+                 604800 ; Expire
+                 60 )  ; Minimum TTL
+
+ns IN A 127.0.0.1 ; nameserver (dns)
+{{@each(it.containers) => container}}
+{{container.hostname.replaceAll(".containers.local", "")}} IN A {{container.ip}} ; {{container.name}} ({{container.id}})
+{{/each}}

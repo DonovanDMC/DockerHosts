@@ -1,0 +1,3 @@
+{{@each(it.containers) => container}}
+{{container.ip}} {{container.hostname}} # {{container.name}} ({{container.id}})
+{{/each}}

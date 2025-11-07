@@ -1,0 +1,14 @@
+services:
+  docker-hosts:
+    container_name: docker-hosts
+    build: .
+    restart: always
+    init: true
+    volumes:
+      - ./templates:/data/templates
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/dns/zones/containers.local.db:/data/zone
+    environment:
+      - TEMPLATE=dns-zone
+      - RESTART_CONTAINERS=dns,caddy
+    network_mode: none
