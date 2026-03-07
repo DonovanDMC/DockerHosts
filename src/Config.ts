@@ -74,6 +74,13 @@ class Config {
         return Object.keys(this.reloadContainerActions);
     }
 
+    static get reloadExecTimeoutMs(): number {
+        const env = process.env.RELOAD_EXEC_TIMEOUT_MS;
+        const timeout = Number.parseInt(env ?? "", 10);
+        if (Number.isNaN(timeout) || timeout <= 0) return 10_000;
+        return timeout;
+    }
+
     static get reloadSignal(): string {
         return process.env.RELOAD_SIGNAL || "SIGUSR1";
     }

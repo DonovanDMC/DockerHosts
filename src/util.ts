@@ -106,15 +106,28 @@ async function execInContainer(id: string, command: string): Promise<void> {
         AttachStdout: true,
         Cmd:          ["sh", "-lc", command]
     });
-    const stream = await exec.start({});
-    await new Promise<void>((resolve, reject) => {
-        stream.on("error", reject);
-        stream.on("end", () => resolve());
-    });
-    const result = await exec.inspect();
-    if (result.ExitCode !== 0) {
-        throw new Error(`exec reload command failed with exit code ${result.ExitCode ?? -1}`);
+    await exec.start({ Detach: true, Tty: false });
+
+    const timeoutMs = Config.reloadExecTimeoutMs;
+    const deadline = Date.now() + timeoutMs;
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+        const result = await exec.inspect();
+        if (!result.Running) {
+            if (result.ExitCode !== 0) {
+                throw new Error(`exec reload command failed with exit code ${result.ExitCode ?? -1}`);
+            }
+            return;
+        }
+        if (Date.now() >= deadline) {
+            throw new Error(`exec reload command timed out after ${timeoutMs}ms`);
+        }
+        await sleep(200);
     }
+}
+
+async function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const counterFile = `${Config.dataDir}/serial.counter`;
