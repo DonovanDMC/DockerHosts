@@ -20,9 +20,12 @@ export async function handleStart(id: string, hostname: string): Promise<void> {
     } else {
         processing.add(id);
         log("group", "Got start for %s", hostname);
-        await refresh(id, false);
-        console.groupEnd();
-        processing.delete(id);
+        try {
+            await refresh(id, false);
+        } finally {
+            console.groupEnd();
+            processing.delete(id);
+        }
     }
 }
 export async function handleStop(id: string, hostname: string): Promise<void> {
@@ -31,9 +34,12 @@ export async function handleStop(id: string, hostname: string): Promise<void> {
     } else {
         processing.add(id);
         log("group", "Got stop for %s", hostname);
-        await refresh(id, true);
-        console.groupEnd();
-        processing.delete(id);
+        try {
+            await refresh(id, true);
+        } finally {
+            console.groupEnd();
+            processing.delete(id);
+        }
         ignoreStopDie.add(id);
         setTimeout(() => ignoreStopDie.delete(id), 100);
     }
@@ -43,10 +49,13 @@ export async function handleDie(id: string, hostname: string): Promise<void> {
         log("warn", "Skipped die for %s", hostname);
     } else {
         processing.add(id);
-        log("group", "Gots die for %s", hostname);
-        await refresh(id, true);
-        console.groupEnd();
-        processing.delete(id);
+        log("group", "Got die for %s", hostname);
+        try {
+            await refresh(id, true);
+        } finally {
+            console.groupEnd();
+            processing.delete(id);
+        }
         ignoreStopDie.add(id);
         setTimeout(() => ignoreStopDie.delete(id), 100);
     }
