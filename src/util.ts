@@ -10,12 +10,14 @@ export function log(type: "log" | "warn" | "debug" | "error" | "group", formatte
 export async function getHosts(): Promise<Array<BasicContainerInfo>> {
     const containers = await Docker.listContainers();
 
-    return containers.filter(c => c.Labels.hostname && hasIp(c)).map(c => ({
-        hostname: c.Labels.hostname!,
-        id:       c.Id,
-        ip:       getIp(c) as string,
-        name:     c.Names[0]!.replace(/^\//, "")
-    }));
+    return containers
+        .filter(c => c.Labels.hostname && (hasIp(c) || !!c.Labels["hostname.ip"]))
+        .map(c => ({
+            hostname: c.Labels.hostname!,
+            id:       c.Id,
+            ip:       c.Labels["hostname.ip"] || (getIp(c) as string),
+            name:     c.Names[0]!.replace(/^\//, "")
+        }));
 }
 
 export function getIp(container: ContainerInfo): string | null {
