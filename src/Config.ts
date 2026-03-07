@@ -4,7 +4,16 @@ import { fileURLToPath } from "node:url";
 
 const dataDir = isDocker() ? "/data" : fileURLToPath(new URL("../", import.meta.url));
 
+export interface ReloadContainerAction {
+    action: "exec" | "kill";
+    value:  string;
+}
+
 class Config {
+    static get applyContainers(): Array<string> {
+        return [...new Set([...this.restartContainers, ...this.reloadContainers])];
+    }
+
     static get dataDir(): string {
         return dataDir;
     }
@@ -19,6 +28,54 @@ class Config {
         if (this.template === "hosts") return `${dataDir}/hosts`;
         if (this.template === "dns-zone") return `${dataDir}/zone`;
         return `${dataDir}/result.txt`;
+    }
+
+    static get reloadContainerActions(): Record<string, ReloadContainerAction> {
+        const rc = process.env.RELOAD_CONTAINERS;
+        if (!rc) return {};
+
+        const specs = splitSpecs(rc);
+        const actions: Record<string, ReloadContainerAction> = {};
+
+        for (const spec of specs) {
+            const [namePart, actionPart] = spec.split(":", 2).map(s => s.trim());
+            if (!namePart) continue;
+
+            if (!actionPart) {
+                actions[namePart] = {
+                    action: "kill",
+                    value:  this.reloadSignal
+                };
+                continue;
+            }
+
+            const killMatch = /^kill\((.+)\)$/i.exec(actionPart);
+            if (killMatch?.[1]) {
+                actions[namePart] = {
+                    action: "kill",
+                    value:  killMatch[1].trim()
+                };
+                continue;
+            }
+
+            const execMatch = /^exec\((.+)\)$/i.exec(actionPart);
+            if (execMatch?.[1]) {
+                actions[namePart] = {
+                    action: "exec",
+                    value:  execMatch[1]
+                };
+                continue;
+            }
+        }
+        return actions;
+    }
+
+    static get reloadContainers(): Array<string> {
+        return Object.keys(this.reloadContainerActions);
+    }
+
+    static get reloadSignal(): string {
+        return process.env.RELOAD_SIGNAL || "SIGUSR1";
     }
 
     static get restartContainers(): Array<string> {
@@ -40,6 +97,27 @@ class Config {
     static async readTemplate(): Promise<string> {
         return readFile(`${dataDir}/templates/${this.template}.squirrelly`, "utf8");
     }
+}
+
+function splitSpecs(input: string): Array<string> {
+    const specs: Array<string> = [];
+    let depth = 0;
+    let start = 0;
+
+    for (let i = 0; i < input.length; i++) {
+        const char = input[i];
+        if (char === "(") depth += 1;
+        else if (char === ")" && depth > 0) depth -= 1;
+        else if (char === "," && depth === 0) {
+            const spec = input.slice(start, i).trim();
+            if (spec) specs.push(spec);
+            start = i + 1;
+        }
+    }
+
+    const last = input.slice(start).trim();
+    if (last) specs.push(last);
+    return specs;
 }
 
 try {

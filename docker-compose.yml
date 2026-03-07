@@ -10,5 +10,5 @@ services:
       - /opt/dns/zones/containers.local.db:/data/zone
     environment:
       - TEMPLATE=dns-zone
-      - RESTART_CONTAINERS=dns,caddy
+      - RELOAD_CONTAINERS=dns:kill(SIGUSR1),caddy:exec(caddy reload --config /etc/caddy/Caddyfile)
     network_mode: none

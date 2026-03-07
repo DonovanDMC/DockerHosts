@@ -159,7 +159,7 @@ export async function refresh(from?: string, remove = false): Promise<number> {
             await writeOther(containers);
             break;
     }
-    for (const name of Config.restartContainers) {
+    for (const name of Config.applyContainers) {
         await restartContainer(name);
     }
     log("log", "Successfully updated %d hosts.", containers.length);
