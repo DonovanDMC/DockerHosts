@@ -62,15 +62,20 @@ export async function handleDie(id: string, hostname: string): Promise<void> {
 }
 
 export async function refresh(from?: string, remove = false): Promise<number> {
+    log("group", "[Refresh] Starting refresh (from=%s, remove=%s)", from ?? "manual", remove);
     const lines = await getLines(),
         containers = await getHosts(),
         duplicateHosts: Array<HostDuplicate> = [],
         seen = new Set<string>(),
         duplicate = new Set<string>();
+    log("debug", "[Refresh] Loaded %d existing lines and %d candidate hosts.", lines.length, containers.length);
 
     if (from && remove && containers.some(c => c.id === from)) {
         const index = containers.findIndex(c => c.id === from);
-        if (index !== -1) containers.splice(index, 1);
+        if (index !== -1) {
+            const [removed] = containers.splice(index, 1);
+            log("debug", "[Refresh] Removed source container %s (%s) before write.", removed!.name, removed!.id);
+        }
     }
 
     for (const container of containers) {
@@ -89,6 +94,9 @@ export async function refresh(from?: string, remove = false): Promise<number> {
             hostname:   host,
             containers: containers.filter(c => c.hostname === host)
         });
+    }
+    if (duplicateHosts.length === 0) {
+        log("debug", "[Refresh] No duplicate hostnames detected.");
     }
 
     for (const dup of duplicateHosts) {
@@ -139,15 +147,23 @@ export async function refresh(from?: string, remove = false): Promise<number> {
         console.groupEnd();
     }
 
+    log("debug", "[Refresh] Backing up output file to %s.bak", Config.outFile);
     await copyFile(Config.outFile, `${Config.outFile}.bak`);
     switch (Config.template) {
-        case "hosts": await writeHosts(containers); break;
-        default:      await writeOther(containers); break;
+        case "hosts":
+            log("debug", "[Refresh] Writing hosts template to %s", Config.outFile);
+            await writeHosts(containers);
+            break;
+        default:
+            log("debug", "[Refresh] Writing %s template to %s", Config.template, Config.outFile);
+            await writeOther(containers);
+            break;
     }
     for (const name of Config.restartContainers) {
         await restartContainer(name);
     }
     log("log", "Successfully updated %d hosts.", containers.length);
+    console.groupEnd();
     return containers.length;
 }
 
@@ -163,13 +179,16 @@ async function writeHosts(containers: Array<BasicContainerInfo>): Promise<void> 
     const newLines = containers.map(({ id, hostname: host, ip, name }) =>
         `${ip.padEnd(maxIPLen)} ${host.padEnd(maxHostLen)} # ${name.padEnd(maxNameLen)} ${id.padEnd(maxIdLen)}`
     );
+    log("debug", "[writeHosts] Writing %d host entries with markers.", newLines.length);
     const marker = createMarker(Config.outFile, startMarker, endMarker);
     await marker.update(newLines);
 }
 
 async function writeOther(containers: Array<BasicContainerInfo>): Promise<void> {
     const template = await Config.readTemplate();
-    const original = (render(template, { containers, serial: await getSerial() }) as string).split("\n");
+    const serial = await getSerial();
+    log("debug", "[writeOther] Rendering %s with serial %s (%d containers).", Config.template, serial, containers.length);
+    const original = (render(template, { containers, serial }) as string).split("\n");
     const lastSOAIndex = original.findIndex(line => line.includes(")")); // find the end of the SOA record
     const soaLines = original.slice(0, lastSOAIndex + 1);
     // host, IN, A, ip, ;, name, (id)
@@ -187,5 +206,6 @@ async function writeOther(containers: Array<BasicContainerInfo>): Promise<void> 
         return line.join(" ");
     });
     const content = [...soaLines, ...paddedLines].join("\n");
+    log("debug", "[writeOther] Writing %d lines to %s", soaLines.length + paddedLines.length, Config.outFile);
     await writeFile(Config.outFile, content);
 }

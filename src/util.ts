@@ -9,15 +9,33 @@ export function log(type: "log" | "warn" | "debug" | "error" | "group", formatte
 
 export async function getHosts(): Promise<Array<BasicContainerInfo>> {
     const containers = await Docker.listContainers();
+    const hosts: Array<BasicContainerInfo> = [];
+    let skippedMissingIp = 0;
 
-    return containers
-        .filter(c => c.Labels.hostname && (hasIp(c) || !!c.Labels["hostname.ip"]))
-        .map(c => ({
-            hostname: c.Labels.hostname!,
-            id:       c.Id,
-            ip:       c.Labels["hostname.ip"] || (getIp(c) as string),
-            name:     c.Names[0]!.replace(/^\//, "")
-        }));
+    for (const container of containers) {
+        const hostname = container.Labels.hostname;
+        if (!hostname) continue;
+
+        const ipFromLabel = container.Labels["hostname.ip"];
+        const ipFromNetwork = getIp(container);
+        const ip = ipFromLabel || ipFromNetwork;
+        if (!ip) {
+            skippedMissingIp += 1;
+            log("debug", "Skipping %s (%s): no network IP and no hostname.ip label.", container.Names[0], container.Id);
+            continue;
+        }
+        if (ipFromLabel && ipFromNetwork && ipFromLabel !== ipFromNetwork) {
+            log("debug", "Using hostname.ip override for %s (%s): %s -> %s", hostname, container.Id, ipFromNetwork, ipFromLabel);
+        }
+        hosts.push({
+            hostname,
+            id:   container.Id,
+            ip,
+            name: container.Names[0]!.replace(/^\//, "")
+        });
+    }
+    log("debug", "Host scan complete: %d containers, %d hosts, %d skipped for missing IP.", containers.length, hosts.length, skippedMissingIp);
+    return hosts;
 }
 
 export function getIp(container: ContainerInfo): string | null {

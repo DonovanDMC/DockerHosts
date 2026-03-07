@@ -12,6 +12,7 @@ export function start(): void {
         if (err || !stream) {
             throw err;
         }
+        log("log", "Docker event stream connected.");
         eventStream = stream; // for cleanup
         const decoder = new TextDecoder();
         let data = "";
@@ -30,6 +31,7 @@ export function start(): void {
                     const action = event.Action;
                     const hostname = event.Actor?.Attributes?.hostname;
                     if (!["start", "stop", "die"].includes(action ?? "") || !hostname || !event.id) continue;
+                    log("debug", "Queueing event %s for %s (%s)", action, hostname, event.id);
                     queue.push(async () => {
                         switch (action) {
                             case "start": return handleStart(event.id!, hostname);
@@ -67,6 +69,7 @@ export function start(): void {
     process.on("SIGINT", cleanup)
         .on("SIGTERM", cleanup)
         .on("SIGUSR1", () => {
+            log("log", "Received SIGUSR1; forcing refresh.");
             void refresh();
         });
 }
