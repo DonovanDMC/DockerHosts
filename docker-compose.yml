@@ -7,8 +7,9 @@ services:
     volumes:
       - ./templates:/data/templates
       - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/dns/zones/containers.local.db:/data/zone
+      #- /opt/dns/zones/containers.local.db:/data/zone:rw,z
+      - /etc/hosts:/data/hosts:rw,z
     environment:
-      - TEMPLATE=dns-zone
-      - RELOAD_CONTAINERS=dns:kill(SIGUSR1),caddy:exec(caddy reload --config /etc/caddy/Caddyfile)
+      - TEMPLATE=hosts
+      - RELOAD_CONTAINERS=caddy:exec(caddy reload --config /etc/caddy/Caddyfile)
     network_mode: none
