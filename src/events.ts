@@ -1,7 +1,8 @@
+import Queue from "queue";
+
 import Docker from "./Docker.js";
 import { handleDie, handleStart, handleStop, refresh } from "./handle.js";
 import { type ContainerEvent, log } from "./util.js";
-import Queue from "queue";
 
 export function start(): void {
     const queue = new Queue({ concurrency: 1, autostart: true });
@@ -17,7 +18,7 @@ export function start(): void {
         eventStream = undefined;
 
         if (error) {
-            log("warn", "Docker event stream disconnected (%s): %s", reason, error instanceof Error ? error.message : String(error));
+            log("warn", "Docker event stream disconnected (%s): %s", reason, error instanceof Error ? error.message : error);
         } else {
             log("warn", "Docker event stream disconnected (%s).", reason);
         }
@@ -64,7 +65,7 @@ export function start(): void {
                     try {
                         const event = JSON.parse(line) as Partial<ContainerEvent>;
                         const action = event.Action;
-                        const hostname = event.Actor?.Attributes?.hostname;
+                        const hostname = event.Actor?.Attributes.hostname;
                         if (!["start", "stop", "die"].includes(action ?? "") || !hostname || !event.id) continue;
                         log("debug", "Queueing event %s for %s (%s)", action, hostname, event.id);
                         queue.push(async () => {
@@ -99,7 +100,7 @@ export function start(): void {
         clearTimeout(reconnectTimer);
         queue.end(new Error("Process terminated."));
         eventStream?.removeAllListeners();
-        // eslint-disable-next-line unicorn/no-process-exit
+         
         process.exit(0);
     }
 

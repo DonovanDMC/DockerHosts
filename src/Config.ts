@@ -1,6 +1,7 @@
-import isDocker from "is-docker";
 import { access, constants, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
+
+import isDocker from "is-docker";
 
 const dataDir = isDocker() ? "/data" : fileURLToPath(new URL("../", import.meta.url));
 
@@ -9,6 +10,7 @@ export interface ReloadContainerAction {
     value:  string;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 class Config {
     static get applyContainers(): Array<string> {
         return [...new Set([...this.restartContainers, ...this.reloadContainers])];

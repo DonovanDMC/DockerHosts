@@ -1,3 +1,8 @@
+import { copyFile, writeFile } from "node:fs/promises";
+
+import { render } from "squirrelly";
+import { createMarker } from "string-marker";
+
 import Config from "./Config.js";
 import {
     type BasicContainerInfo,
@@ -8,9 +13,7 @@ import {
     restartContainer,
     getSerial
 } from "./util.js";
-import { createMarker } from "string-marker";
-import { render } from "squirrelly";
-import { copyFile, writeFile } from "node:fs/promises";
+
 
 const processing = new Set<string>(), ignoreStopDie = new Set<string>();
 const startMarker = "# begin docker-hosts", endMarker   = "# end docker-hosts";

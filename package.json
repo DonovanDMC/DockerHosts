@@ -20,18 +20,18 @@
     "string-marker": "^1.0.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@stylistic/eslint-plugin": "^5.10.0",
     "@types/bun": "^1.3.1",
     "@types/debug": "^4.1.12",
     "@types/dockerode": "^3.3.45",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
-    "eslint": "^8.57.1",
+    "@uwu-codes/eslint-config": "^2.0.8",
+    "eslint": "^9.39.4",
     "eslint-plugin-import": "^2.32.0",
-    "eslint-plugin-import-newlines": "^1.4.0",
-    "eslint-plugin-jsdoc": "^50.8.0",
-    "eslint-plugin-json": "^4.0.1",
-    "eslint-plugin-prefer-arrow": "^1.2.3",
-    "eslint-plugin-unicorn": "^56.0.1",
-    "eslint-plugin-unused-imports": "^4.2.0"
+    "eslint-plugin-unicorn": "^59.0.1",
+    "eslint-plugin-unused-imports": "^4.4.1",
+    "globals": "^16.5.0",
+    "jiti": "^2.6.1",
+    "typescript-eslint": "^8.57.1"
   }
 }

@@ -1,7 +1,10 @@
-import Docker from "./Docker.js";
-import Config from "./Config.js";
-import { type ContainerInfo } from "dockerode";
 import { access, readFile, writeFile } from "node:fs/promises";
+
+import { type ContainerInfo } from "dockerode";
+
+import Config from "./Config.js";
+import Docker from "./Docker.js";
+
 
 export function log(type: "log" | "warn" | "debug" | "error" | "group", formatter: string, ...args: Array<unknown>): void {
     console[type](`\u001B[90m%s \u001B[0m${formatter}`, new Date().toISOString(), ...args);
@@ -110,7 +113,7 @@ async function execInContainer(id: string, command: string): Promise<void> {
 
     const timeoutMs = Config.reloadExecTimeoutMs;
     const deadline = Date.now() + timeoutMs;
-    // eslint-disable-next-line no-constant-condition
+     
     while (true) {
         const result = await exec.inspect();
         if (!result.Running) {
@@ -168,13 +171,13 @@ export interface ContainerEvent {
     Action: string;
     Actor:  {
         Attributes: Record<string, string>;
-        ID:         string;
+        ID: string;
     };
-    Type:   string;
     from:   string;
     id:     string;
     scope: "local";
     status: string;
     time:     number;
     timeNano: number;
+    Type:   string;
 }
