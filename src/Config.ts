@@ -7,10 +7,9 @@ const dataDir = isDocker() ? "/data" : fileURLToPath(new URL("../", import.meta.
 
 export interface ReloadContainerAction {
     action: "exec" | "kill";
-    value:  string;
+    value: string;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-extraneous-class
 class Config {
     static get applyContainers(): Array<string> {
         return [...new Set([...this.restartContainers, ...this.reloadContainers])];
@@ -46,7 +45,7 @@ class Config {
             if (!actionPart) {
                 actions[namePart] = {
                     action: "kill",
-                    value:  this.reloadSignal
+                    value: this.reloadSignal,
                 };
                 continue;
             }
@@ -55,7 +54,7 @@ class Config {
             if (killMatch?.[1]) {
                 actions[namePart] = {
                     action: "kill",
-                    value:  killMatch[1].trim()
+                    value: killMatch[1].trim(),
                 };
                 continue;
             }
@@ -64,7 +63,7 @@ class Config {
             if (execMatch?.[1]) {
                 actions[namePart] = {
                     action: "exec",
-                    value:  execMatch[1]
+                    value: execMatch[1],
                 };
                 continue;
             }
@@ -84,6 +83,7 @@ class Config {
     }
 
     static get reloadSignal(): string {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return process.env.RELOAD_SIGNAL || "SIGUSR1";
     }
 
@@ -100,6 +100,7 @@ class Config {
     }
 
     static get template(): string {
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         return process.env.TEMPLATE || "hosts";
     }
 

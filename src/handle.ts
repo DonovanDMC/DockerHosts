@@ -11,12 +11,11 @@ import {
     type HostDuplicate,
     getLines,
     restartContainer,
-    getSerial
+    getSerial,
 } from "./util.js";
 
-
 const processing = new Set<string>(), ignoreStopDie = new Set<string>();
-const startMarker = "# begin docker-hosts", endMarker   = "# end docker-hosts";
+const startMarker = "# begin docker-hosts", endMarker = "# end docker-hosts";
 export async function handleStart(id: string, hostname: string): Promise<void> {
     if (processing.has(id)) {
         log("warn", "Skipped start for %s", hostname);
@@ -94,8 +93,8 @@ export async function refresh(from?: string, remove = false): Promise<number> {
 
     for (const host of duplicate) {
         duplicateHosts.push({
-            hostname:   host,
-            containers: containers.filter(c => c.hostname === host)
+            hostname: host,
+            containers: containers.filter(c => c.hostname === host),
         });
     }
     if (duplicateHosts.length === 0) {
@@ -112,7 +111,7 @@ export async function refresh(from?: string, remove = false): Promise<number> {
                 log("debug", "[Refresh] Containers seem to be numbered, using highest container.");
                 const highest = dup.containers.reduce((prev, curr) => {
                     const num = Number(curr.name.split("-").at(-1));
-                    return isNaN(num) ?  prev : Math.max(prev, num);
+                    return isNaN(num) ? prev : Math.max(prev, num);
                 }, -1);
                 container = dup.containers.find(c => c.name.endsWith(`-${highest}`));
                 if (container === undefined) {
@@ -180,7 +179,7 @@ async function writeHosts(containers: Array<BasicContainerInfo>): Promise<void> 
     }
 
     const newLines = containers.map(({ id, hostname: host, ip, name }) =>
-        `${ip.padEnd(maxIPLen)} ${host.padEnd(maxHostLen)} # ${name.padEnd(maxNameLen)} ${id.padEnd(maxIdLen)}`
+        `${ip.padEnd(maxIPLen)} ${host.padEnd(maxHostLen)} # ${name.padEnd(maxNameLen)} ${id.padEnd(maxIdLen)}`,
     );
     log("debug", "[writeHosts] Writing %d host entries with markers.", newLines.length);
     const marker = createMarker(Config.outFile, startMarker, endMarker);
@@ -202,7 +201,7 @@ async function writeOther(containers: Array<BasicContainerInfo>): Promise<void> 
         longestHost = Math.max(longestHost, line[0]!.length);
         longestIp = Math.max(longestIp, line[3]!.length);
     }
-    const paddedLines = lines.map(line => {
+    const paddedLines = lines.map((line) => {
         if (line.length < 4) return line.join(" ");
         line[0] = line[0]!.padEnd(longestHost);
         if (line.at(4) === ";") line[3] = line[3]!.padEnd(longestIp);

@@ -5,7 +5,6 @@ import { type ContainerInfo } from "dockerode";
 import Config from "./Config.js";
 import Docker from "./Docker.js";
 
-
 export function log(type: "log" | "warn" | "debug" | "error" | "group", formatter: string, ...args: Array<unknown>): void {
     console[type](`\u001B[90m%s \u001B[0m${formatter}`, new Date().toISOString(), ...args);
 }
@@ -21,7 +20,7 @@ export async function getHosts(): Promise<Array<BasicContainerInfo>> {
 
         const ipFromLabel = container.Labels["hostname.ip"];
         const ipFromNetwork = getIp(container);
-        const ip = ipFromLabel || ipFromNetwork;
+        const ip = ipFromLabel ?? ipFromNetwork;
         if (!ip) {
             skippedMissingIp += 1;
             log("debug", "Skipping %s (%s): no network IP and no hostname.ip label.", container.Names[0], container.Id);
@@ -32,9 +31,9 @@ export async function getHosts(): Promise<Array<BasicContainerInfo>> {
         }
         hosts.push({
             hostname,
-            id:   container.Id,
+            id: container.Id,
             ip,
-            name: container.Names[0]!.replace(/^\//, "")
+            name: container.Names[0]!.replace(/^\//, ""),
         });
     }
     log("debug", "Host scan complete: %d containers, %d hosts, %d skipped for missing IP.", containers.length, hosts.length, skippedMissingIp);
@@ -107,13 +106,13 @@ async function execInContainer(id: string, command: string): Promise<void> {
     const exec = await dockerContainer.exec({
         AttachStderr: true,
         AttachStdout: true,
-        Cmd:          ["sh", "-lc", command]
+        Cmd: ["sh", "-lc", command],
     });
     await exec.start({ Detach: true, Tty: false });
 
     const timeoutMs = Config.reloadExecTimeoutMs;
     const deadline = Date.now() + timeoutMs;
-     
+
     while (true) {
         const result = await exec.inspect();
         if (!result.Running) {
@@ -169,15 +168,15 @@ export interface HostDuplicate {
 
 export interface ContainerEvent {
     Action: string;
-    Actor:  {
+    Actor: {
         Attributes: Record<string, string>;
         ID: string;
     };
-    from:   string;
-    id:     string;
+    from: string;
+    id: string;
     scope: "local";
     status: string;
-    time:     number;
+    time: number;
     timeNano: number;
-    Type:   string;
+    Type: string;
 }

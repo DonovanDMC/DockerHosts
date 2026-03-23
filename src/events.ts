@@ -80,7 +80,7 @@ export function start(): void {
                     }
                 }
             })
-                .on("error", e => {
+                .on("error", (e) => {
                     reconnect("error", e);
                 })
                 .on("end", () => {
@@ -100,7 +100,7 @@ export function start(): void {
         clearTimeout(reconnectTimer);
         queue.end(new Error("Process terminated."));
         eventStream?.removeAllListeners();
-         
+
         process.exit(0);
     }
 

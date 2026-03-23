@@ -26,6 +26,6 @@
     "noUncheckedIndexedAccess": true,
     "allowImportingTsExtensions": true
   },
-  "include": ["src/**/*"],
+  "include": ["eslint.config.mts", "src/**/*"],
   "exclude": ["node_modules"]
 }

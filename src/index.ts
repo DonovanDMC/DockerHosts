@@ -3,7 +3,6 @@ import { start } from "./events.js";
 import { refresh } from "./handle.js";
 import { log } from "./util.js";
 
-
 log("log", "Launched");
 await refresh();
 
